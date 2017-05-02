@@ -28,12 +28,11 @@ public class Main {
     public static void main(String[] args) {
         checkArgs(args);
         convert();
-
     }
 
     private static void checkArgs(String[] args) {
         if(args.length < 2 && !args[0].equalsIgnoreCase("help")) {
-            LOGGER.info("Not enough arguments");
+            LOGGER.debug("Not enough arguments");
             throw new IllegalArgumentException("Not enough arguments. Type help for help.");
         }
 
@@ -47,42 +46,42 @@ public class Main {
         String inputPath = input.getAbsolutePath();
 
         //Check if input is valid
-        if(!input.exists() || !(MD_PATTERN.matcher(inputPath).matches() || ZIP_PATTERN.matcher(inputPath).matches())) {
-            LOGGER.info("Invalid input");
-            throw new IllegalArgumentException("Input is not valid");
-        } else {
-            LOGGER.debug("Setting source path");
+        if(input.isDirectory()) {
             source = inputPath;
+        } else {
+            if (!input.exists() || !(MD_PATTERN.matcher(inputPath).matches() || ZIP_PATTERN.matcher(inputPath).matches())) {
+                LOGGER.debug("Invalid input");
+                throw new IllegalArgumentException("Input is not valid");
+            } else {
+                LOGGER.info("Setting source path");
+                source = inputPath;
+            }
         }
 
         //Output can be on second or third position
-        File output;
+        File output = new File(args[1]);
+
+        if(output.exists()) {
+            LOGGER.debug("Output file already exists");
+            throw new IllegalArgumentException("Output file already exists");
+        } else {
+            LOGGER.info("Setting output path");
+            out = output.getAbsolutePath();
+        }
 
         //Check if template is valid if it is set
         if(args.length == 3) {
-            File templateFile = new File(args[1]);
+            File templateFile = new File(args[2]);
 
             String templPath = templateFile.getAbsolutePath();
 
-            if(!templateFile.exists() || !TEMPLATE_PATTERN.matcher(templPath).matches()) {
-                LOGGER.info("Invalid template");
+            if (!templateFile.exists() || !TEMPLATE_PATTERN.matcher(templPath).matches()) {
+                LOGGER.debug("Invalid template");
                 throw new IllegalArgumentException("Template is not valid");
             } else {
-                LOGGER.debug("Setting template path");
+                LOGGER.info("Setting template path");
                 template = templPath;
             }
-
-            output = new File(args[2]);
-        } else {
-            output = new File(args[1]);
-        }
-
-        if(output.exists()) {
-            LOGGER.info("Output file already exists");
-            throw new IllegalArgumentException("Output file already exists");
-        } else {
-            LOGGER.debug("Setting output path");
-            out = output.getAbsolutePath();
         }
     }
 
@@ -93,22 +92,21 @@ public class Main {
             if(MD_PATTERN.matcher(source).matches()) {
                 InputStream md = new FileInputStream(source);
                 converter.setInputStream(md);
-                LOGGER.debug("Source InputStream is set");
 
             } else if(ZIP_PATTERN.matcher(source).matches()) {
                 InputStream zip = new FileInputStream(source);
                 converter.setInputZip(zip);
-                LOGGER.debug("Source InputStream is set");
+
+            } else {
+                File folder = new File(source);
             }
 
             if(template != null) {
                 InputStream tmpl = new FileInputStream(template);
                 converter.setTemplate(tmpl);
-                LOGGER.debug("Template InputStream is set");
             }
 
             OutputStream output = Files.newOutputStream(Paths.get(out));
-            LOGGER.debug("OutputStream is set");
 
             converter
                     .setOutput(output)
@@ -123,8 +121,8 @@ public class Main {
     private static void help() {
         System.out.println("Order of arguments has to be respected.");
         System.out.println("Path to source file, zip or directory. (required)");
+        System.out.println("Output path with name of converted document. (required)");
         System.out.println("Path to odt template (.odt or .ott). (optional)");
-        System.out.println("Path with name of converted document. (required)");
     }
 
 }
