@@ -49,9 +49,16 @@ public class Main {
      * @param args array of arguments
      */
     private static void checkArgs(String[] args) {
-        if(args.length < 2 && !args[0].equalsIgnoreCase("help")) {
-            LOGGER.debug("Not enough arguments");
-            throw new IllegalArgumentException("Not enough arguments. Type help for help.");
+        if(args.length < 2) {
+            if(args.length == 1) {
+                if(!args[0].equalsIgnoreCase("help")) {
+                    LOGGER.debug("Invalid arguments");
+                    throw new IllegalArgumentException("Invalid arguments. Type help for help.");
+                }
+            } else {
+                LOGGER.debug("Not enough arguments");
+                throw new IllegalArgumentException("Not enough arguments. Type help for help.");
+            }
         }
 
         if(args[0].equalsIgnoreCase("help")) {
