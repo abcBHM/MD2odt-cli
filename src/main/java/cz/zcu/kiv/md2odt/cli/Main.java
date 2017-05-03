@@ -5,12 +5,17 @@ import cz.zcu.kiv.md2odt.MD2odt;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 /**
- * Created by Vít Mazín on 28.04.2017.
+ * CLI application for MD2odt library
+ *
+ * @author Vít Mazín
+ * @version 2017-05-03
  */
 public class Main {
 
@@ -25,11 +30,24 @@ public class Main {
     private static String template = null;
     private static String out = null;
 
+    private static Charset charset = null;
+
+    /**
+     * Main method of application.
+     *
+     * @param args array of arguments
+     */
     public static void main(String[] args) {
         checkArgs(args);
         convert();
     }
 
+    /**
+     * This method checks if arguments passed
+     * to application are valid.
+     *
+     * @param args array of arguments
+     */
     private static void checkArgs(String[] args) {
         if(args.length < 2 && !args[0].equalsIgnoreCase("help")) {
             LOGGER.debug("Not enough arguments");
@@ -70,35 +88,76 @@ public class Main {
         }
 
         //Check if template is valid if it is set
-        if(args.length == 3) {
-            File templateFile = new File(args[2]);
-
-            String templPath = templateFile.getAbsolutePath();
-
-            if (!templateFile.exists() || !TEMPLATE_PATTERN.matcher(templPath).matches()) {
-                LOGGER.debug("Invalid template");
-                throw new IllegalArgumentException("Template is not valid");
-            } else {
-                LOGGER.info("Setting template path");
-                template = templPath;
+        if(args.length > 2) {
+            try {
+                for (int i = 2; i < args.length; i += 2) {
+                    switchSwitches(args[i], args[i + 1]);
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                LOGGER.debug("Invalid optional arguments");
+                throw new IllegalArgumentException("Invalid optional arguments");
             }
         }
     }
 
+    /**
+     * Parsing switcher from arguments.
+     *
+     * @param sw switch
+     * @param value value after switch
+     */
+    private static void switchSwitches(String sw, String value) {
+        switch (sw) {
+            case "-t":
+                File templateFile = new File(value);
+
+                String templPath = templateFile.getAbsolutePath();
+
+                if (!templateFile.exists() || !TEMPLATE_PATTERN.matcher(templPath).matches()) {
+                    LOGGER.debug("Invalid template");
+                    throw new IllegalArgumentException("Template is not valid");
+                } else {
+                    LOGGER.info("Setting template path");
+                    template = templPath;
+                }
+                break;
+
+            case "-c":
+                try {
+                    value = value.toUpperCase();
+                    charset = Charset.forName(value);
+                    LOGGER.info("Using " + value + " charset");
+                } catch (Exception e) {
+                    LOGGER.warn("Unsupported encoding: " + value);
+                    charset = StandardCharsets.UTF_8;
+                }
+                break;
+        }
+    }
+
+    /**
+     * Method sets all parameters to converter and
+     * start converting process.
+     */
     private static void convert() {
         try {
             Converter converter = MD2odt.converter();
 
+            if(charset == null) {
+                charset = StandardCharsets.UTF_8;
+            }
+
             if(MD_PATTERN.matcher(source).matches()) {
                 InputStream md = new FileInputStream(source);
-                converter.setInputStream(md);
+                converter.setInput(md, charset);
 
             } else if(ZIP_PATTERN.matcher(source).matches()) {
                 InputStream zip = new FileInputStream(source);
-                converter.setInputZip(zip);
+                converter.setInputZip(zip, charset);
 
             } else {
                 File folder = new File(source);
+                converter.setInputFolder(folder, charset);
             }
 
             if(template != null) {
@@ -118,11 +177,23 @@ public class Main {
         }
     }
 
+    /**
+     * Method prints help.
+     */
     private static void help() {
         System.out.println("Order of arguments has to be respected.");
         System.out.println("Path to source file, zip or directory. (required)");
         System.out.println("Output path with name of converted document. (required)");
-        System.out.println("Path to odt template (.odt or .ott). (optional)");
+        System.out.println("Optional switches:");
+        System.out.println("-t followed by path to template");
+        System.out.println("-c followed by charset which can be one of these:");
+        System.out.println("utf-8");
+        System.out.println("utf-16");
+        System.out.println("utf-16be");
+        System.out.println("utf-16le");
+        System.out.println("iso-8859-1");
+        System.out.println("iso-8859-2");
+        System.out.println("windows-1250");
+        System.out.println("us-ascii");
     }
-
 }
