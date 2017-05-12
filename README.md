@@ -11,5 +11,6 @@ Order of required arguments has to be respected.
   
 Use example:  
 ```
-java -jar MD2odt-cli.jar C:\Users\Vita\Desktop\resources C:\Users\Vita\Desktop\out.odt -t C:\Users\Vita\Desktop\resources\template.odt -c iso-8859-2
+java -jar MD2odt-cli.jar C:\Users\Vita\Desktop\resources C:\Users\Vita\Desktop\out.odt 
+-t C:\Users\Vita\Desktop\resources\template.odt -c iso-8859-2
 ```
