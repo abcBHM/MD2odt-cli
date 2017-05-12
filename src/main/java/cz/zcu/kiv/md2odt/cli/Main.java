@@ -53,11 +53,13 @@ public class Main {
             if(args.length == 1) {
                 if(!args[0].equalsIgnoreCase("help")) {
                     LOGGER.debug("Invalid arguments");
-                    throw new IllegalArgumentException("Invalid arguments. Type help for help.");
+                    help();
+                    System.exit(0);
                 }
             } else {
                 LOGGER.debug("Not enough arguments");
-                throw new IllegalArgumentException("Not enough arguments. Type help for help.");
+                help();
+                System.exit(0);
             }
         }
 
@@ -188,19 +190,10 @@ public class Main {
      * Method prints help.
      */
     private static void help() {
-        System.out.println("Order of arguments has to be respected.");
-        System.out.println("Path to source file, zip or directory. (required)");
-        System.out.println("Output path with name of converted document. (required)");
-        System.out.println("Optional switches:");
-        System.out.println("-t followed by path to template");
-        System.out.println("-c followed by charset which can be one of these:");
-        System.out.println("utf-8");
-        System.out.println("utf-16");
-        System.out.println("utf-16be");
-        System.out.println("utf-16le");
-        System.out.println("iso-8859-1");
-        System.out.println("iso-8859-2");
-        System.out.println("windows-1250");
-        System.out.println("us-ascii");
+        System.out.println("java -jar MD2odt.jar path_to_source path_to_output [-t path_to_template] [-c user_JVM_supported_charset]");
+        System.out.println("java -jar MD2odt.jar help");
+        System.out.println("");
+        System.out.println("Order of required arguments has to be respected.");
+        System.out.println("");
     }
 }
